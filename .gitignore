@@ -1,0 +1,13 @@
+node_modules
+.DS_Store
+.vscode
+.jsbeautifyrc
+.idea/
+config.json
+test
+logs/*
+pm2_config.json
+npm-debug.log
+example
+yarn.lock
+mysql2elasticsearch

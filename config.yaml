@@ -1,0 +1,11 @@
+default:
+  mysql:
+    host: 127.0.0.1
+    port: 3306
+    user: root
+    password: "12345678"
+    database: v2_okoer5
+    # debug: ['ComQueryPacket', 'RowDataPacket']
+
+  api_url: "http://125.35.6.80:8080/ftba/itownet"
+  totalCount: 0

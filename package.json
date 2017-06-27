@@ -1,0 +1,35 @@
+{
+  "name": "okoer-cosmetic-spider",
+  "version": "1.0.0",
+  "description": "药监局网站爬取化妆品信息",
+  "main": "app.js",
+  "author": "tomoat",
+  "scripts": {
+    "start": "node app.js",
+    "test": "test"
+  },
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tomoat/cosmetic-spider.git"
+  },
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "cron": "^1.2.1",
+    "he": "^1.1.1",
+    "html-entities": "^1.2.1",
+    "lodash": "^4.17.4",
+    "mkdirp": "^0.5.1",
+    "moment": "^2.18.1",
+    "mysql2": "^1.3.5",
+    "superagent": "^3.5.2",
+    "winston": "^2.3.1",
+    "yaml-config": "^0.3.0"
+  },
+  "devDependencies": {
+    "babel-eslint": "^7.2.3",
+    "eslint": "^4.1.1",
+    "eslint-plugin-import": "^2.6.0",
+    "eslint-plugin-promise": "^3.5.0"
+  }
+}
