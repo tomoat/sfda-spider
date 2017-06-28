@@ -13,13 +13,13 @@ parserOptions:
 rules:
   indent:
     - error
-    - 2
+    - 4
     -
       SwitchCase: 1
       VariableDeclarator:
-        var: 2
-        let: 2
-        const: 3
+        var: 4
+        let: 4
+        const: 4
   linebreak-style:
     - error
     - unix

@@ -5,9 +5,8 @@ node_modules
 .idea/
 config.json
 test
-logs/*
+logs/*.log
 pm2_config.json
 npm-debug.log
 example
 yarn.lock
-mysql2elasticsearch
