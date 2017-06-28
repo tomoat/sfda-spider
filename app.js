@@ -21,7 +21,7 @@ const cosmetic_url = config.api_url + '/fwAction.do'
 const startIndex = 0
 
 // 运行程序时立即执行一次
-// start()
+start()
 
 // console.log(entities.decode('ｄｄｄｄｄｄｄｄｄddd'))
 // console.log(_.trim('（CI 77891)', '()'))
