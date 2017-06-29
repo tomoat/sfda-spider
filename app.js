@@ -54,7 +54,7 @@ async function start() {
                 // await saveData('cosmetic_list', record)
                 const baInfo = await sendRequest(cosmetic_url, 'getBaInfo', { processid: record.processid })
                 if (baInfo && !_.isEmpty(baInfo.id)) {
-                    const newBaInfo = buildInfo(baInfo, record.provinceConfirm)
+                    const newBaInfo = buildInfo(baInfo, record.apply_date)
                     await saveData('cosmetic_list', newBaInfo)
                     for (let pfList of baInfo.pfList) {
                         const pfresult = {
@@ -65,7 +65,7 @@ async function start() {
                         await insertPf('cosmetic_pflist', pfresult)
                     }
                 } else {
-                    logger.error('detail page error ' + record.productName)
+                    logger.error(`detail page error, processid: ${record.processid} productName: ${record.productName}`)
                 }
                 /* const attachments = await sendRequest(cosmetic_url, 'getAttachmentCpbz', { processId: record.processid })
                  const ssid = attachments.ssid.substr(0, attachments.ssid.length-1)
@@ -276,7 +276,7 @@ const job = new CronJob('00 30 22 * * 1-7', function() {
          * at 20:30:00 PM. It does not run on Saturday
          * or Sunday.
          */
-        // start()
+    start()
 }, function() {
         /* This function is executed when the job stops */
     logger.info('the job stop')
@@ -306,5 +306,5 @@ function ToCDB(str) {
 }
 
 function trimStr(str) {
-    return _.trimEnd(_.trimStart(_.trim(str), '('), ')?')
+    return _.trimEnd(_.trimStart(_.trim(str), '('), ')?*')
 }
