@@ -3,6 +3,7 @@ const cron = require('cron')
 const _ = require('lodash')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
+const moment = require('moment')
 const logger = require('./logger')
 
 const db = require('./db')
@@ -18,40 +19,50 @@ const CronJob = cron.CronJob
 
 const TimeZone = 'Asia/Shanghai'
 const cosmetic_url = config.api_url + '/fwAction.do'
-const startIndex = 0
+const startIndex = 1
 
 // 运行程序时立即执行一次
 start()
 
-// console.log(entities.decode('ｄｄｄｄｄｄｄｄｄddd'))
-// console.log(_.trim('（CI 77891)', '()'))
-// console.log(ToCDB('二氧化钛（CI 77891）'))
-// console.log(ToCDB('番茄（SOLANUM LYCOPERSICUM）提取物？'))
-// console.log(_.trim(ToCDB('二氧化钛（CI 77891）'), '()'))
-// console.log(trimStr('(是的冯绍峰)?'))
-
-
+/**
+ * 全量爬取方法
+ */
 async function start() {
     try {
         const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: startIndex })
         // const pageCount = result.pageCount
-        const totalCount = result.totalCount // 最新的总条数
-        const currentCount = config.totalCount // 已经抓取的总条数
-        const currentPage = Math.ceil((totalCount - currentCount) / 15)
+        console.log(result)
 
-        for (let i = 1; i <= currentPage; i++) {
-            logger.info('爬取第' + i + '页++++++总共' + currentPage + '页')
+        const new_time = _.replace(result.list[0].provinceConfirm, /-/g, '') || 0 // 最新数据的时间
+        const old_time = config.update_time // 前次爬取数据时的时间
+        console.log(new_time)
+        console.log(old_time)
+
+        let i = 0
+        let change_time = new_time
+
+        while (change_time > old_time) {
+            i++
+            logger.info('爬取第' + i + '页++++++')
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
-            /*const currentTotalPage = result.pageCount
-            if(currentPage != currentTotalPage) {
-              logger.info(`当前总页数已经变为${currentTotalPage}`)
-            }*/
+            change_time = _.replace(result.list[0].provinceConfirm, /-/g, '')
+
+            if(change_time === old_time) {
+                config.update_time = result.totalCount
+                yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
+                break
+            }
             // logger.info(result)
             const records = buildData(result)
             // console.log(records)
             // 此处不能使用_.forEach
             for (let record of records) {
                 // await saveData('cosmetic_list', record)
+                if(_.replace(record.apply_date, /-/g, '') === old_time) {
+                    config.update_time = result.totalCount
+                    yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
+                    break
+                }
                 const baInfo = await sendRequest(cosmetic_url, 'getBaInfo', { processid: record.processid })
                 if (baInfo && !_.isEmpty(baInfo.id)) {
                     const newBaInfo = buildInfo(baInfo, record.apply_date)
@@ -74,13 +85,12 @@ async function start() {
                    downloadFile(attachment, ssid)
                  }*/
             }
-
-            if (currentPage == i) {
-                logger.info('===' + currentPage)
-                config.totalCount = result.totalCount
-                yamlConfig.updateConfig(config, __dirname + '/config/config.yaml', 'default')
-            }
         }
+
+        /*for (let i = 1; i <= currentPage; i++) {
+            logger.info('爬取第' + i + '页++++++总共' + currentPage + '页')
+            const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
+        }*/
         logger.info('<<<数据爬取完成>>>')
     } catch (err) {
         logger.info(err)
@@ -171,7 +181,7 @@ function sendRequest(url, method, options) {
 async function saveData(table, data) {
     const processid = data.processid
     try {
-        let [rows] = await db.query(`SELECT * FROM ${table} WHERE processid = ? OR productName = ?`, [processid, data.productName])
+        let [rows] = await db.query(`SELECT * FROM ${table} WHERE processid = ? OR productName = ?`, [processid, data.productname])
         // console.log(rows)
         if (_.isEmpty(rows)) {
             const inserts = data || {}
@@ -306,5 +316,15 @@ function ToCDB(str) {
 }
 
 function trimStr(str) {
-    return _.trimEnd(_.trimStart(_.trim(str), '('), ')?*')
+    // return _.trimEnd(_.trimStart(_.trim(str), '('), ')?*')
+    let newStr = str
+    if (/^\([^\(\)]+\)$/.test(str)) {
+        console.log(str)
+        newStr = _.trimEnd(_.trimStart(_.trim(str), '('), ')?*.、')
+    } else {
+        newStr = _.trimEnd(_.trimStart(_.trim(str), '\''), '?*.、')
+    }
+    let lastStr = _.replace(_.replace(_.replace(newStr, /\?/g, ' '), /\(\s/g, '('), /\s\)/g,')'
+  )
+    return lastStr
 }
