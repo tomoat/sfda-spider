@@ -31,7 +31,7 @@ async function start() {
     try {
         const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: startIndex })
         // const pageCount = result.pageCount
-        console.log(result)
+        // console.log(result)
 
         const new_time = _.replace(result.list[0].provinceConfirm, /-/g, '') || 0 // 最新数据的时间
         const old_time = config.update_time // 前次爬取数据时的时间
