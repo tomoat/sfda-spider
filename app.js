@@ -48,7 +48,7 @@ async function start() {
             change_time = _.replace(result.list[0].provinceConfirm, /-/g, '')
 
             if(change_time === old_time) {
-                config.update_time = result.totalCount
+                config.update_time = new_time
                 yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
                 break
             }
@@ -59,7 +59,7 @@ async function start() {
             for (let record of records) {
                 // await saveData('cosmetic_list', record)
                 if(_.replace(record.apply_date, /-/g, '') === old_time) {
-                    config.update_time = result.totalCount
+                    config.update_time = new_time
                     yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
                     break
                 }
