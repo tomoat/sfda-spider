@@ -274,13 +274,13 @@ function downloadFile(attachment, ssid) {
 }
 
 async function importProduct() {
-    const [rows] = await db.query('SELECT * FROM cosmetic_list ORDER BY id')
+    const [rows] = await db.query('SELECT * FROM cosmetic_list ORDER BY updated ASC')
     while (rows.length > 0) {
         let row = rows.splice(0, 1)[0]
         await db.query('DELETE FROM cosmetic_list2 WHERE processid = ? OR productName = ?', [row.processid, row.productName])
     }
 
-    await db.query('INSERT INTO cosmetic_list2 (`processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated`) SELECT `processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated` FROM cosmetic_list')
+    await db.query('INSERT INTO cosmetic_list2 (`processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated`) SELECT `processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated` FROM cosmetic_list ORDER BY updated ASC')
 
     await db.query('INSERT INTO `cosmetic_pflist2` (`processid`, `cname`) SELECT `processid`, `cname` FROM cosmetic_pflist')
 
