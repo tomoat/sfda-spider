@@ -91,6 +91,7 @@ async function start() {
             logger.info('爬取第' + i + '页++++++总共' + currentPage + '页')
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
         }*/
+        importProduct()
         logger.info('<<<数据爬取完成>>>')
     } catch (err) {
         logger.info(err)
@@ -242,7 +243,7 @@ function filterAttachData(data) {
 async function saveAttachData(table, data) {
     const { processid, id } = data
     try {
-        let rows = await db.query(`SELECT * FROM ${table} WHERE processid = ? AND fid = ?`, [processid, id])
+        let [rows] = await db.query(`SELECT * FROM ${table} WHERE processid = ? AND fid = ?`, [processid, id])
         if (_.isEmpty(rows)) {
             const inserts = filterAttachData(data) || {}
             const record = await db.query(`INSERT INTO ${table} SET ?`, inserts)
@@ -270,6 +271,21 @@ function downloadFile(attachment, ssid) {
     }
     const res = request.get(img_url).retry(5).pipe(fs.createWriteStream(destination_file), { end: false })
     return res
+}
+
+async function importProduct() {
+    const [rows] = await db.query('SELECT * FROM cosmetic_list ORDER BY id')
+    while (rows.length > 0) {
+        let row = rows.splice(0, 1)[0]
+        await db.query('DELETE FROM cosmetic_list2 WHERE processid = ? OR productName = ?', [row.processid, row.productName])
+    }
+
+    await db.query('INSERT INTO cosmetic_list2 (`processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated`) SELECT `processid`, `productName`, `brand`, `enterprise_name`, `enterprise_address`, `real_enterprise_name`, `real_enterprise_address`, `apply_date`, `apply_sn`, `remark`, `parent_id`, `org_name`, `org_code`, `launch_date`, `is_entrust`, `is_auto_product`, `sid`, `flow_name`, `enterprise_sn`, `displayname`, `applytype`, `updated` FROM cosmetic_list')
+
+    await db.query('INSERT INTO `cosmetic_pflist2` (`processid`, `cname`) SELECT `processid`, `cname` FROM cosmetic_pflist')
+
+    await db.query('DELETE FROM cosmetic_list')
+    logger.info('数据导入完成')
 }
 /**
  * Seconds: 0-59
