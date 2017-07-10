@@ -92,6 +92,8 @@ async function start() {
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
         }*/
         importProduct()
+        config.update_time = new_time
+        yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
         logger.info('<<<数据爬取完成>>>')
     } catch (err) {
         logger.info(err)
