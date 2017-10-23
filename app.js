@@ -47,7 +47,7 @@ async function start() {
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
             change_time = _.replace(result.list[0].provinceConfirm, /-/g, '')
 
-            if(change_time === old_time) {
+            if (change_time === old_time) {
                 config.update_time = new_time
                 yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
                 break
@@ -57,15 +57,16 @@ async function start() {
             // console.log(records)
             // 此处不能使用_.forEach
             for (let record of records) {
+                let apply_date = record.apply_date
                 // await saveData('cosmetic_list', record)
-                if(_.replace(record.apply_date, /-/g, '') === old_time) {
+                if (_.replace(record.apply_date, /-/g, '') === old_time) {
                     config.update_time = new_time
                     yamlConfig.updateConfig(config, __dirname + '/config.yaml', 'default')
                     break
                 }
                 const baInfo = await sendRequest(cosmetic_url, 'getBaInfo', { processid: record.processid })
                 if (baInfo && !_.isEmpty(baInfo.id)) {
-                    const newBaInfo = buildInfo(baInfo, record.apply_date)
+                    const newBaInfo = buildInfo(baInfo, apply_date)
                     await saveData('cosmetic_list', newBaInfo)
                     for (let pfList of baInfo.pfList) {
                         const pfresult = {
@@ -185,13 +186,13 @@ async function saveData(table, data) {
     const processid = data.processid
     try {
         let [rows] = await db.query(`SELECT * FROM ${table} WHERE processid = ? OR productName = ?`, [processid, data.productname])
-        // console.log(rows)
-        if (_.isEmpty(rows)) {
-            const inserts = data || {}
-            const record = await db.query(`INSERT INTO ${table} SET ?`, inserts)
-            // logger.info(record)
-            return record
+        const inserts = data || {}
+        if (!_.isEmpty(rows)) {
+            await db.query(`DELETE FROM ${table} WHERE processid = ?`, [rows[0].processid])
         }
+        const record = await db.query(`INSERT INTO ${table} SET ?`, inserts)
+        // logger.info(record)
+        return record
     } catch (err) {
         logger.error(err)
         logger.info(table, require('util').inspect(data))
@@ -299,18 +300,18 @@ async function importProduct() {
  */
 // 工作日(周一至周五)11点30分执行
 const job = new CronJob('00 30 22 * * 1-7', function() {
-        /*
+    /*
          * Runs every weekday (Monday through Friday)
          * at 20:30:00 PM. It does not run on Saturday
          * or Sunday.
          */
     start()
 }, function() {
-        /* This function is executed when the job stops */
+    /* This function is executed when the job stops */
     logger.info('the job stop')
 },
-    true, /* Start the job right now */
-    TimeZone /* Time zone of this job. */
+true, /* Start the job right now */
+TimeZone /* Time zone of this job. */
 )
 
 logger.info('job status', job.running)
@@ -342,7 +343,6 @@ function trimStr(str) {
     } else {
         newStr = _.trimEnd(_.trimStart(_.trim(str), '\''), '?*.、')
     }
-    let lastStr = _.replace(_.replace(_.replace(newStr, /\?/g, ' '), /\(\s/g, '('), /\s\)/g,')'
-  )
+    let lastStr = _.replace(_.replace(_.replace(newStr, /\?/g, ' '), /\(\s/g, '('), /\s\)/g, ')')
     return lastStr
 }
