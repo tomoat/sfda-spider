@@ -1,4 +1,6 @@
+const request = require('superagent')
 const axios = require('axios')
+const rp = require('request-promise')
 const cron = require('cron')
 const _ = require('lodash')
 const fs = require('fs')
@@ -40,13 +42,15 @@ async function start() {
         console.log(new_time)
         console.log(old_time)
 
-        let i = 0
+        let i = 3020
         let change_time = new_time
 
         while (change_time > old_time) {
             i++
             logger.info('爬取第' + i + '页++++++')
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
+            console.log(11111)
+            // console.log(result)
             change_time = _.replace(result.list[0].provinceConfirm, /-/g, '')
 
             if (change_time === old_time) {
@@ -162,6 +166,22 @@ function buildInfo(data, updated) {
     return result
 }
 
+function sendRequest1(url, method, options) {
+    return request.post(url)
+        .query({ method: method })
+        .send(options)
+        .set('Content-Type', 'application/x-www-form-urlencoded;utf-8')
+        .set('Accept', 'application/json')
+        .set('User-Agent', 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3198.0 Safari/537.36')
+        .retry(5)
+        .then((res) => {
+            console.log(res)
+            return res.body
+        }).catch(err => {
+            logger.error(err)
+        })
+}
+
 function sendRequest(url, method, data) {
     if (method == 'getBaInfo') {
         data = qs.stringify(data)
@@ -170,19 +190,70 @@ function sendRequest(url, method, data) {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded;utf-8',
             'Accept': '*/*',
-            'Accept-Encoding': 'gzip, deflate',
-            'Connection': 'keep-alive',
-            'X-Requested-With': 'XMLHttpRequest',
+            // 'Accept-Encoding': 'gzip, deflate',
+            // 'Connection': 'keep-alive',
+            // 'X-Requested-With': 'XMLHttpRequest',
             'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3198.0 Safari/537.36'
         }
 
     }).then((res) => {
-        // console.log(res)
+        console.log(res)
         return res.data
     }).catch(err => {
         logger.error(err)
     })
 }
+
+function sendRequest3(url, method, data) {
+    console.log(url)
+    console.log(method)
+    console.log(data)
+    console.log(typeof data)
+
+    // const options = {
+    //     method: 'POST',
+    //     uri: url + '?method=' + method,
+    //     body: data,
+    //     json: true // Automatically stringifies the body to JSON
+    // }
+    const options = {
+        method: 'POST',
+        uri: url + '?method=' + method,
+        form: data,
+        headers: {
+            'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3198.0 Safari/537.36',
+            'content-type': 'application/x-www-form-urlencoded' // Is set automatically
+        },
+        json: true
+    }
+
+    rp(options)
+        .then(function(res) {
+            console.log(res)
+            console.log(typeof res)
+            return res
+        })
+        .catch(function(err) {
+            logger.error(err)
+        })
+    // return rp.post(url + '?method=' + method, data, {
+    //     headers: {
+    //         'Content-Type': 'application/x-www-form-urlencoded;utf-8',
+    //         'Accept': '*/*',
+    //         // 'Accept-Encoding': 'gzip, deflate',
+    //         // 'Connection': 'keep-alive',
+    //         // 'X-Requested-With': 'XMLHttpRequest',
+    //         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_12_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/62.0.3198.0 Safari/537.36'
+    //     }
+
+    // }).then((res) => {
+    //     console.log(res)
+    //     return res.data
+    // }).catch(err => {
+    //     logger.error(err)
+    // })
+}
+
 /**
  * 查询并插入数据方法
  *
@@ -308,18 +379,18 @@ async function importProduct() {
  */
 // 工作日(周一至周五)11点30分执行
 const job = new CronJob('00 30 22 * * 1-7', function() {
-    /*
+        /*
          * Runs every weekday (Monday through Friday)
          * at 20:30:00 PM. It does not run on Saturday
          * or Sunday.
          */
-    start()
-}, function() {
-    /* This function is executed when the job stops */
-    logger.info('the job stop')
-},
-true, /* Start the job right now */
-TimeZone /* Time zone of this job. */
+        start()
+    }, function() {
+        /* This function is executed when the job stops */
+        logger.info('the job stop')
+    },
+    true, /* Start the job right now */
+    TimeZone /* Time zone of this job. */
 )
 
 logger.info('job status', job.running)
