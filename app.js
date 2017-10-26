@@ -4,7 +4,7 @@ const _ = require('lodash')
 const fs = require('fs')
 const mkdirp = require('mkdirp')
 const moment = require('moment')
-const qs = require('qs')
+const qs = require('querystring')
 const logger = require('./logger')
 
 const db = require('./db')
@@ -163,10 +163,7 @@ function buildInfo(data, updated) {
 }
 
 function sendRequest(url, method, data) {
-    if (method == 'getBaInfo') {
-        data = qs.stringify(data)
-    }
-    return axios.post(url + '?method=' + method, data, {
+    return axios.post(url + '?method=' + method, qs.stringify(data), {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded;utf-8',
             'Accept': '*/*',
@@ -177,7 +174,7 @@ function sendRequest(url, method, data) {
         }
 
     }).then((res) => {
-        // console.log(res)
+        // console.log(res.data)
         return res.data
     }).catch(err => {
         logger.error(err)
