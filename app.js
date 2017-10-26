@@ -69,14 +69,16 @@ async function start() {
                 const baInfo = await sendRequest(cosmetic_url, 'getBaInfo', { processid: record.processid })
                 if (baInfo && !_.isEmpty(baInfo.id)) {
                     const newBaInfo = buildInfo(baInfo, provinceConfirm)
-                    await saveData('cosmetic_list', newBaInfo)
-                    for (let pfList of baInfo.pfList) {
-                        const pfresult = {
-                            processid: record.processid,
-                            cname: trimStr(ToCDB(pfList.cname))
+                    const res = await saveData('cosmetic_list', newBaInfo)
+                    if (!_.isEmpty(res)) {
+                        for (let pfList of baInfo.pfList) {
+                            const pfresult = {
+                                processid: record.processid,
+                                cname: trimStr(ToCDB(pfList.cname))
+                            }
+                            // console.log(pfresult)
+                            await insertPf('cosmetic_pflist', pfresult)
                         }
-                        // console.log(pfresult)
-                        await insertPf('cosmetic_pflist', pfresult)
                     }
                 } else {
                     logger.error(`detail page error, processid: ${record.processid} productName: ${record.productName}`)
@@ -192,12 +194,17 @@ async function saveData(table, data) {
     try {
         let [rows] = await db.query(`SELECT * FROM ${table} WHERE processid = ? OR productName = ?`, [processid, data.productname])
         const inserts = data || {}
-        if (!_.isEmpty(rows)) {
+        /* if (!_.isEmpty(rows)) {
             await db.query(`DELETE FROM ${table} WHERE processid = ?`, [rows[0].processid])
+        } */
+        if (_.isEmpty(rows)) {
+            const record = await db.query(`INSERT INTO ${table} SET ?`, inserts)
+            // logger.info(record)
+            // console.log(record)
+            return record
+        } else {
+            return []
         }
-        const record = await db.query(`INSERT INTO ${table} SET ?`, inserts)
-        // logger.info(record)
-        return record
     } catch (err) {
         logger.error(err)
         logger.info(table, require('util').inspect(data))
