@@ -47,6 +47,11 @@ async function start() {
             i++
             logger.info('爬取第' + i + '页++++++')
             const result = await sendRequest(cosmetic_url, 'getBaNewInfoPage', { page: i })
+            // console.log(result)
+            if (_.isEmpty(result)) {
+                logger.info(i + ' <<<此页无数据>>>')
+                continue
+            }
             change_time = _.replace(result.list[0].provinceConfirm, /-/g, '')
 
             if (change_time === old_time) {
